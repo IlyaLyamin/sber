@@ -104,7 +104,7 @@ def logout():
 
 def main():
     db_session.global_init('db/web.sqlite')
-    app.run()
+    app.run(port=9502)
 
 
 if __name__ == '__main__':

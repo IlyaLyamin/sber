@@ -28,7 +28,7 @@ body {
     font-size: 20px;
     padding-top: 50px;
     margin: 0 auto;
-    width: 30%;
+    width: 40%;
 }
 
 .main_menu a{
@@ -40,15 +40,15 @@ body {
 
 .main_menu li{
     list-style: none;
-    min-width: 145px;
-    width: 80%;
+    min-width: 140px;
+    width: 70%;
     height: 50px;
     box-shadow: 10px 10px 10px black;
     font-family: monospace;
     border-radius: 100px;
     text-align: center;
     background: #8860D0;
-    margin: 50px 10%;
+    margin: 5% 5%;
 }
 
 .main_menu li:hover{
@@ -81,14 +81,14 @@ body {
 
 .sb_block {
     float: left;
-    width: 30%;
+    width: 20%;
 }
 
 .sb_logo {
     display: block;
     margin: auto;
     margin-top: 70px;
-    width: 80%;
+    width: 100%;
     max-width: 425px;
 }
 
