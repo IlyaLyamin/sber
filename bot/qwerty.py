@@ -2,7 +2,7 @@
 #и замение '/home/dmk/Загрузки/web(2).sqlite'
 #на свой путь
 
-#token = '5399889380:AAEkrl5yNOQUTge7QDUMqthhg2gM_Kwd5bw'
+#token = '5456850082:AAHobVZF6M_eQ5F9PRHxsRfKHX1wFBw-v2o'
 #==Подключение библиотек==
 import sqlite3
 import telebot
@@ -10,7 +10,7 @@ from telebot import types
 #========================
 
 #====================Создание бота==========================
-API_TOKEN = '5554097137:AAG-eYpLkg_YvlrNyI_FTc5iFF2I-V8rM-0'
+API_TOKEN = '5456850082:AAHobVZF6M_eQ5F9PRHxsRfKHX1wFBw-v2o'
 bot = telebot.TeleBot(API_TOKEN)
 #===========================================================
 
@@ -23,16 +23,27 @@ city = ''            #город пользователя
 hour = 0             #время для занятий, удобный для пользователя
 telegram_id = 0      #уникальный идентификатор пользователя телеграмма
 lvl = 1              #уровень знаний
+score = 0
 
-exp = ''
-answer = ''
-answers = []
+questions = [ [0, '000', '000 000 000', '0', '000', 0],
+              [0, '000', '000 000 000', '0', '000', 0],
+              [0, '000', '000 000 000', '0', '000', 0] ]
 actual_question_index = 0
+
+@bot.message_handler(commands=['start'])
+def handle_start(message):
+    bot.send_message(message.chat.id, "Привет, I'm UDILIYA\nЯ буду обучать вас цифровой грамотности")
+    bot.send_message(message.chat.id, "Цифровая грамотность — способность находить, оценивать и чётко передавать информацию с помощью набора текста и других средств массовой информации на различных цифровых платформах.")
+    bot.send_message(message.chat.id, "/reg - регистриция")
+    
+@bot.message_handler(commands=['help'])
+def handle_help(message):
+    bot.send_message(message.chat.id, "Если вам понадобится помощь\nПишите сюда:\nt.me/Enciof")
 
 @bot.message_handler(commands=['reg'])
 def start(message):
     id_list = []
-    connection = sqlite3.connect('/home/dmk/Загрузки/web(2).sqlite')
+    connection = sqlite3.connect('db/web.sqlite')
     cursor = connection.cursor()
     cursor.execute("""SELECT * from USERS""")
     records = cursor.fetchall()
@@ -50,9 +61,10 @@ def start(message):
         global hour
         global telegram_id
         global lvl
+        global score
         telegram_id = message.from_user.id
         
-        connection = sqlite3.connect('/home/dmk/Загрузки/web(2).sqlite')
+        connection = sqlite3.connect('db/web.sqlite')
         cursor = connection.cursor()
         cursor.execute("""SELECT * from USERS""")
         records = cursor.fetchall()
@@ -63,6 +75,7 @@ def start(message):
                 surname = row[2]
                 mail = row[3]
                 age = row[4]
+                score = row[5]
                 city = row[6]
                 hour = row[8]
                 lvl = row[9]
@@ -119,7 +132,7 @@ def get_hour(message):
         bot.send_message(message.from_user.id, 'Я работаю только с 9 до 20)')
         bot.register_next_step_handler(message, get_hour)
     else:
-        connection = sqlite3.connect('/home/dmk/Загрузки/web(2).sqlite')
+        connection = sqlite3.connect('db/web.sqlite')
         cursor = connection.cursor()
         cursor.execute("""SELECT * from USERS""")
         records = cursor.fetchall()
@@ -135,7 +148,7 @@ def handle_material(message):
     global lvl
     
     if 1<=lvl<10:
-        connection = sqlite3.connect('/home/dmk/Загрузки/web(2).sqlite')
+        connection = sqlite3.connect('db/web.sqlite')
         cursor = connection.cursor()
         cursor.execute(f"""SELECT * from VIDEO WHERE lvl = {lvl}""")
         record = cursor.fetchall()
@@ -154,14 +167,18 @@ def handle_material(message):
 def handle_poll(message):
     global id
     global lvl
+    global questions
     global API_TOKEN
+    global actual_question_index
     if 1<=lvl<10:
-        connection = sqlite3.connect('/home/dmk/Загрузки/web(2).sqlite')
+        connection = sqlite3.connect('db/web.sqlite')
         cursor = connection.cursor()
         cursor.execute(f"""SELECT * from QUESTION WHERE lvl = {lvl}""")
         records = cursor.fetchall()
-                
-        epi_send_test(records, message.from_user.id)
+        
+        actual_question_index = 0
+        questions = list(records)
+        send_test(records, actual_question_index, message.from_user.id)
         
         lvl = lvl + 1
         cursor.execute(f"""UPDATE USERS SET lvl = {lvl} WHERE id = {id}""")
@@ -171,20 +188,7 @@ def handle_poll(message):
         global surname
         bot.send_message(message.from_user.id, f'Поздравляю {name} {surname}, вы завершили обучение')
 
-def epi_send_test(records, chat_id):
-    global actual_question_index
-    if 0<=actual_question_index<(len(records)-1):
-        send_test(records, actual_question_index, chat_id)
-        actual_question_index = actual_question_index + 1
-        
-    elif actual_question_index==(len(records)-1):
-        send_test(records, actual_question_index, chat_id)
-        actual_question_index = 0
-
 def send_test(records, question_index, chat_id):
-    global exp
-    global answer
-    global answers
     row = records[question_index]
     q = row[1]
     answers = row[2].split()
@@ -197,25 +201,49 @@ def send_test(records, question_index, chat_id):
         keyboard.add(key); #добавляем кнопку в клавиатуру
     bot.send_message(chat_id, q, reply_markup=keyboard)
 
-
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
-    global exp
-    global answer
-    if message.text.strip() == answer:
-        bot.send_message(message.from_user.id, f'right\n{exp}', reply_markup=types.ReplyKeyboardRemove())
-    elif message.text.strip() in answers:
-        bot.send_message(message.from_user.id, f'wrong\n{exp}', reply_markup=types.ReplyKeyboardRemove())
-
-
-@bot.message_handler(commands=['start'])
-def handle_start(message):
-    bot.send_message(message.chat.id, "Привет, I'm UDILIYA\nЯ буду обучать вас цифровой грамотности")
-    bot.send_message(message.chat.id, "Цифровая грамотность — способность находить, оценивать и чётко передавать информацию с помощью набора текста и других средств массовой информации на различных цифровых платформах.")
-    bot.send_message(message.chat.id, "/reg - регистриция")
+    global id
+    global score
+    global questions
+    global actual_question_index
     
-@bot.message_handler(commands=['help'])
-def handle_help(message):
-    bot.send_message(message.chat.id, "Если вам понадобится помощь\nПишите сюда:\nt.me/Enciof")
+    right_answer_ball = 1#Ura's idea
+    answer = int(questions[actual_question_index][3])
+    answers = questions[actual_question_index][2].split()
+    explanation = questions[actual_question_index][-2]
+    
+    if message.text.strip() == answers[answer]:
+        bot.send_message(message.from_user.id, f'right\n{explanation}', reply_markup=types.ReplyKeyboardRemove())
+        score = score + right_answer_ball
+        if len(questions) > (actual_question_index+1) > 0:
+            actual_question_index = actual_question_index + 1
+            send_test(questions, actual_question_index, message.from_user.id)
+        elif len(questions) == (actual_question_index+1):
+            send_test(questions, (len(questions)-1), message.from_user.id)
+            actual_question_index=0
+            
+            connection = sqlite3.connect('db/web.sqlite')
+            cursor = connection.cursor()
+            cursor.execute(f"""UPDATE USERS SET reit = {score} WHERE id = {id}""")
+            connection.commit()
+            
+            bot.send_message(message.from_user.id, 'На сегодня всё!', reply_markup=types.ReplyKeyboardRemove())
+
+    elif message.text.strip() in answers:
+        bot.send_message(message.from_user.id, f'wrong\n{explanation}', reply_markup=types.ReplyKeyboardRemove())
+        if len(questions) > (actual_question_index+1) > 0:
+            actual_question_index = actual_question_index + 1
+            send_test(questions, actual_question_index, message.from_user.id)
+        elif len(questions) == (actual_question_index+1):
+            send_test(questions, (len(questions)-1), message.from_user.id)
+            actual_question_index=0
+            
+            connection = sqlite3.connect('db/web.sqlite')
+            cursor = connection.cursor()
+            cursor.execute(f"""UPDATE USERS SET reit = {score} WHERE id = {id}""")
+            connection.commit()
+            
+            bot.send_message(message.from_user.id, 'На сегодня всё!', reply_markup=types.ReplyKeyboardRemove())
 
 bot.infinity_polling()
