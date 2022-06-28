@@ -43,7 +43,7 @@ def handle_help(message):
 @bot.message_handler(commands=['reg'])
 def start(message):
     id_list = []
-    connection = sqlite3.connect('db/web.sqlite')
+    connection = sqlite3.connect('sber/db/web.sqlite')
     cursor = connection.cursor()
     cursor.execute("""SELECT * from USERS""")
     records = cursor.fetchall()
@@ -64,7 +64,7 @@ def start(message):
         global score
         telegram_id = message.from_user.id
         
-        connection = sqlite3.connect('db/web.sqlite')
+        connection = sqlite3.connect('sber/db/web.sqlite')
         cursor = connection.cursor()
         cursor.execute("""SELECT * from USERS""")
         records = cursor.fetchall()
@@ -132,7 +132,7 @@ def get_hour(message):
         bot.send_message(message.from_user.id, 'Я работаю только с 9 до 20)')
         bot.register_next_step_handler(message, get_hour)
     else:
-        connection = sqlite3.connect('db/web.sqlite')
+        connection = sqlite3.connect('sber/db/web.sqlite')
         cursor = connection.cursor()
         cursor.execute("""SELECT * from USERS""")
         records = cursor.fetchall()
@@ -148,7 +148,7 @@ def handle_material(message):
     global lvl
     
     if 1<=lvl<10:
-        connection = sqlite3.connect('db/web.sqlite')
+        connection = sqlite3.connect('sber/db/web.sqlite')
         cursor = connection.cursor()
         cursor.execute(f"""SELECT * from VIDEO WHERE lvl = {lvl}""")
         record = cursor.fetchall()
@@ -171,7 +171,7 @@ def handle_poll(message):
     global API_TOKEN
     global actual_question_index
     if 1<=lvl<10:
-        connection = sqlite3.connect('db/web.sqlite')
+        connection = sqlite3.connect('sber/db/web.sqlite')
         cursor = connection.cursor()
         cursor.execute(f"""SELECT * from QUESTION WHERE lvl = {lvl}""")
         records = cursor.fetchall()
@@ -223,7 +223,7 @@ def handle_text(message):
             send_test(questions, (len(questions)-1), message.from_user.id)
             actual_question_index=0
             
-            connection = sqlite3.connect('db/web.sqlite')
+            connection = sqlite3.connect('sber/db/web.sqlite')
             cursor = connection.cursor()
             cursor.execute(f"""UPDATE USERS SET reit = {score} WHERE id = {id}""")
             connection.commit()
@@ -239,7 +239,7 @@ def handle_text(message):
             send_test(questions, (len(questions)-1), message.from_user.id)
             actual_question_index=0
             
-            connection = sqlite3.connect('db/web.sqlite')
+            connection = sqlite3.connect('sber/db/web.sqlite')
             cursor = connection.cursor()
             cursor.execute(f"""UPDATE USERS SET reit = {score} WHERE id = {id}""")
             connection.commit()
